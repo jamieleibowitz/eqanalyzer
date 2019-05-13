@@ -33,8 +33,29 @@ else:
 # the entire sound file is stored into an array
 f_s = song1.frame_rate
 song1Data = song1.get_array_of_samples()
-freqs = fftp.fftfreq(len(song1Data)) * f_s
-song1ft = fftp.fft(song1Data)
+# for each fft call that stft makes, nps determines how many samples it takes in
+nps = 8820
+# asize is the size of the resulting arrays from calling stft
+asize = nps//2+1
+# initializing the array where the overall average of each frequency will be stored
+song1avg = np.zeros(asize)
+# loops through the song, each stft call will get 2 seconds worth of data
+for i in range(0, len(song1Data), 2 * f_s):
+    # ensuring that we don't go out of bounds by doubling back to exactly 2*f_s+1 samples before the end
+    if i + 2 * f_s >= len(song1Data):
+        i = len(song1Data) - 2 * f_s - 1
+    # avger calculates the weight of the current stft call against the data stored in song1avg
+    avger = 2 * f_s/(i + 2 * f_s)
+    # temp stores the latest stft call
+    freqs, temp = sgnl.stft(song1Data[i:i+2*f_s], fs = f_s, nperseg=nps)[0:3:2]
+    # collapse temp into a 1d array
+    temp = np.mean(temp, axis=1)
+    # add weights temp and song1avg
+    temp = [x * avger for x in temp]
+    song1avg = [x * (1-avger) for x in song1avg]
+    # sum the values by frequency to get the new average signal strength at each frequency
+    song1avg = [sum(x) for x in zip(temp, song1avg)]
 
-plt.semilogx(freqs, np.log10(np.abs(song1ft))-6)
+# plot the result
+plt.semilogx(freqs, np.log10(np.abs(song1avg))-8)
 plt.show()
