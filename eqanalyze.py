@@ -13,6 +13,20 @@ import tkinter as tk
 from tkinter import filedialog
 import sys
 
+def openFile():
+    filestring = filedialog.askopenfilename(filetypes = (("mp3 files", "*.mp3"),("wav files", "*.wav")))
+    # ensuring that the selected file type is opened correctly, then opening the file 
+    # or exiting the program if no file was selected
+    if not filestring:
+        sys.exit()
+    elif filestring.lower().endswith('.mp3'):
+        songData = AudioSegment.from_file(filestring, format="mp3")
+    elif filestring.lower().endswith('.wav'):
+        songData = AudioSegment.from_file(filestring, format="wav")
+    else:
+        print("Error - File 1: cannot open file of selected file type. Please select an mp3 or wav file")
+    return songData
+
 def ftmusic(song):
     # the entire sound file is stored into an array
     f_s = song.frame_rate
@@ -45,33 +59,15 @@ def ftmusic(song):
 root = tk.Tk()
 root.withdraw()
 
-file1 = filedialog.askopenfilename(filetypes = (("mp3 files", "*.mp3"),("wav files", "*.wav")))
-file2 = filedialog.askopenfilename(filetypes = (("mp3 files", "*.mp3"),("wav files", "*.wav")))
-
-# ensuring that the selected file type is opened correctly, then opening the file 
-# or exiting the program if no file was selected
-if not file1:
-    sys.exit()
-elif file1.lower().endswith('.mp3'):
-    song1 = AudioSegment.from_file(file1, format="mp3")
-elif file1.lower().endswith('.wav'):
-    song1 = AudioSegment.from_file(file1, format="wav")
-else:
-    print("Error - File 1: cannot open file of selected file type. Please select an mp3 or wav file")
-if not file2:
-    sys.exit()
-elif file2.lower().endswith('mp3'):
-    song2 = AudioSegment.from_file(file2, format="mp3")
-elif file2.lower().endswith('.wav'):
-    song2 = AudioSegment.from_file(file2, format="wav")
-else:
-    print("Error - File 2: cannot open file of selected file type. Please select an mp3 or wav file")
+song1 = openFile()
+song2 = openFile()
 
 freqs1, ftSong1 = ftmusic(song1)
 freqs2, ftSong2 = ftmusic(song2)
 
 # plot the result
 plt.semilogx(freqs1, ftSong1-np.amax(ftSong1), freqs2, ftSong2-np.amax(ftSong2))
+plt.legend(['First song', 'Second song'])
 plt.show()
 
 plt.close()
